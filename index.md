@@ -5,7 +5,7 @@ layout: home
 hero:
   name: "GoScouter"
   text: "General purpose web analyzer"
-  tagline: A fast, no-nonsense toolkit for scouting, probing, and analyzing the web — written in Go.
+  tagline: A fast, no-nonsense toolkit for scouting, probing, and analyzing the net — written in Go.
   image:
     src: /logo.png
     alt: GoScouter
@@ -14,8 +14,8 @@ hero:
       text: Get Started
       link: /get-started
     - theme: alt
-      text: API Reference
-      link: /api
+      text: SDK Reference
+      link: /sdk
 ---
 <script setup>
 import {
