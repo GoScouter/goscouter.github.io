@@ -57,7 +57,7 @@ const member = [
    {
      avatar: 'https://www.github.com/deanx00.png',
      name: 'Dean',
-     title: 'Community Manager',
+     title: 'Maintainer',
      links: [
        { icon: 'github', link: 'https://github.com/deanx00' },
        { icon: 'discord', link: 'https://discord.com/users/484748555932925959' },
