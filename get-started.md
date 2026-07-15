@@ -2,8 +2,9 @@
 
 GoScouter (`gs`) is a fast, no-nonsense toolkit for scouting, probing, and
 analyzing the net. It runs as an interactive terminal application: you point it
-at a target site, and it drops you into a shell where built-in commands and
-[modules](/sdk) gather information about that target.
+at a target site, and it drops you into a shell where built-in
+[commands](/commands) and [modules](/modules) gather information about that
+target.
 
 GoScouter is written in Go and runs on **Linux, macOS, and Windows**.
 
@@ -35,18 +36,21 @@ below.
 
 ## Run
 
-GoScouter always needs a `--target`. The target must include an `http://` or
-`https://` prefix:
+GoScouter always needs a `--target`:
 
 ```sh
 ./gs --target https://example.com
 ```
 
+Without a target it prints usage and exits:
+
+```
+Usage: gs --target <example.com>
+```
+
 You can also run it straight from source without producing a binary:
 
 ```sh
-make run
-# or
 go run ./cmd --target https://example.com
 ```
 
@@ -54,48 +58,59 @@ go run ./cmd --target https://example.com
 
 When you launch `gs`, it walks through a short startup sequence:
 
-1. **Validates the target.** GoScouter sends a request to the site and checks
-   that it responds successfully (an HTTP `2xx` status) within a 5-second
-   timeout. If the site can't be reached, it stops before doing anything else:
+1. **Prints the banner** with the build version and time.
+
+2. **Enters the interactive shell.** GoScouter records the target, puts the
+   terminal into raw mode, loads its [modules](/modules), and shows the prompt:
 
    ```
-   Cannot reach targeted website!
+    ██████╗  ██████╗ ███████╗ ██████╗ ██████╗ ██╗   ██╗████████╗███████╗██████╗
+   ██╔════╝ ██╔═══██╗██╔════╝██╔════╝██╔═══██╗██║   ██║╚══██╔══╝██╔════╝██╔══██╗
+   ██║  ███╗██║   ██║███████╗██║     ██║   ██║██║   ██║   ██║   █████╗  ██████╔╝
+   ██║   ██║██║   ██║╚════██║██║     ██║   ██║██║   ██║   ██║   ██╔══╝  ██╔══██╗
+   ╚██████╔╝╚██████╔╝███████║╚██████╗╚██████╔╝╚██████╔╝   ██║   ███████╗██║  ██║
+    ╚═════╝  ╚═════╝ ╚══════╝ ╚═════╝ ╚═════╝  ╚═════╝    ╚═╝   ╚══════╝╚═╝  ╚═╝
+
+                        GS dev • unknown
+
+   Target: https://example.com
+   (gs) ❯
    ```
 
-2. **Connects and enters the shell.** On success you'll see the banner and a
-   confirmation, then GoScouter puts the terminal into raw mode and starts its
-   interactive prompt:
-
-   ```
-   Targeting site: https://example.com
-   Successfully connected to the target website!
-   (gs) >
-   ```
-
-3. **Runs commands and modules.** At the `(gs) >` prompt you type commands to
-   scout the target. GoScouter ships with a set of built-in commands, and
-   [modules](/sdk) add new capabilities on top — each module contributes its own
+3. **Runs commands and modules.** At the `(gs) ❯` prompt you type commands to
+   scout the target. GoScouter ships with a set of built-in
+   [commands](/commands) and built-in [modules](/modules), and you can
+   [install](/modules#installing-modules) more — each module contributes its own
    command that runs against the current target.
 
-### Built-in commands
+## Your first scout
 
-| Command | Description |
-| --- | --- |
-| `help` | List the available built-in commands and flags. |
-| `clear` | Clear the current terminal buffer. |
-| `exit` | Exit the `gs` shell. |
+Every module is invoked by name at the prompt. Try the built-ins against your
+target:
 
-You can also leave the shell at any time with **Ctrl-D**, and **Ctrl-C**
-abandons the current line without quitting.
+```
+(gs) ❯ http
+(gs) ❯ dns
+(gs) ❯ subdomains
+(gs) ❯ scan
+```
 
-### Modules
+`http` fingerprints the response, `dns` pulls the domain's records,
+`subdomains` enumerates subdomains from certificate transparency, and `scan`
+crawls the whole domain and writes an HTML graph. See [Modules](/modules) for
+the full list and their options.
 
-Everything beyond the built-ins comes from **modules** — self-contained scouting
-capabilities that GoScouter discovers, loads, and runs against your target. A
-module is just a standalone executable that speaks GoScouter's protocol, so it
-can be written in any language.
+Type `help` at any time to list every available command:
 
-Want to build your own? Head to the [SDK Reference](/sdk).
+```
+(gs) ❯ help
+```
+
+## Leaving the shell
+
+- Type `exit` to quit.
+- **Ctrl-D** on an empty line exits the shell.
+- **Ctrl-C** abandons the current line without quitting.
 
 ## Platform support
 
@@ -113,3 +128,13 @@ Build on the platform you want to run on, or cross-compile with Go's built-in
 # Example: build a Windows binary from any platform
 GOOS=windows GOARCH=amd64 go build -o gs.exe ./cmd
 ```
+
+## Where to next
+
+- **[Commands](/commands)** — the built-in shell commands, including installing
+  and removing modules.
+- **[Modules](/modules)** — the scouting capabilities that ship in the box and
+  how to add more.
+- **[SDK Reference](/sdk)** — build your own module in Go (or any language).
+- **[Publishing a Module](/publishing)** — package and share a module through
+  the registry.

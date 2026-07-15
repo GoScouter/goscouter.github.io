@@ -5,7 +5,7 @@ layout: home
 hero:
   name: "GoScouter"
   text: "General purpose web analyzer"
-  tagline: A fast, no-nonsense toolkit for scouting, probing, and analyzing the net — written in Go.
+  tagline: A fast, no-nonsense toolkit for scouting, probing, and analyzing the net.
   image:
     src: /logo.png
     alt: GoScouter
@@ -14,8 +14,31 @@ hero:
       text: Get Started
       link: /get-started
     - theme: alt
+      text: Modules
+      link: /modules
+    - theme: alt
       text: SDK Reference
       link: /sdk
+
+features:
+  - icon: 🖥️
+    title: Interactive scouting shell
+    details: Point gs at a target and drop into a raw-mode terminal where every command runs against that site.
+  - icon: 🧭
+    title: Batteries-included modules
+    details: DNS records, HTTP fingerprinting, certificate-transparency subdomains, and a full-domain scan ship in the box.
+  - icon: 🧩
+    title: Extensible by design
+    details: Modules are standalone executables that speak a tiny JSON protocol, so you can write them in any language.
+  - icon: 📦
+    title: Install from the registry
+    details: Pull community modules by reference with "install author/module@version" — checksummed and cached automatically.
+  - icon: 🕸️
+    title: Spider-web scans
+    details: Crawl a target and its subdomains, then render the findings as an interactive HTML graph.
+  - icon: 🐹
+    title: Pure Go, cross-platform
+    details: A single static binary that builds and runs the same on Linux, macOS, and Windows.
 ---
 <script setup>
 import {
