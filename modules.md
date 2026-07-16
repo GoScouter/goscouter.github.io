@@ -6,7 +6,7 @@ contributes a [command](/commands) of the same name; running it scouts the
 current target and prints the result.
 
 GoScouter ships with four modules and can [install](#installing-modules) more
-from the registry. To build your own, see the [SDK Reference](/sdk).
+from any Git repository. To build your own, see the [SDK Reference](/sdk).
 
 ## Built-in modules
 
@@ -128,16 +128,16 @@ host, so installing more modules automatically makes your scans richer.
 ## Installing modules
 
 Add a module to your session with the [`install`](/commands#install) command.
-It accepts either a **registry reference** (`author/module@version`) or a direct
-URL to a module manifest:
+It takes a reference to the module's **Git repository** and a **version**:
 
 ```
-(gs) ❯ install idank/nginx@1.0.0
+(gs) ❯ install github.com/GoScouter/nginx-module@1.0.0
 ```
 
-GoScouter resolves the module's manifest, downloads the binary built for your
-platform, verifies its SHA-256 checksum, and caches it under your user cache
-directory (for example `~/.cache/gs`). The new command is available right away:
+GoScouter clones the repository, reads its `manifest.json`, downloads the binary
+built for your platform, verifies its SHA-256 checksum, and caches it under your
+user cache directory (for example `~/.cache/gs`). The new command is available
+right away:
 
 ```
 (gs) ❯ nginx
@@ -150,8 +150,8 @@ install once. Remove one with [`uninstall`](/commands#uninstall):
 (gs) ❯ uninstall nginx
 ```
 
-For the manifest format, platform keys, and how the registry is laid out, see
-[Publishing a Module](/publishing).
+For the manifest format, release keys, and how a module repository is laid out,
+see [Publishing a Module](/publishing).
 
 ## Writing your own
 

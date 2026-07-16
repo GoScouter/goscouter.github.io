@@ -1,47 +1,61 @@
 # Publishing a Module
 
 Once you've built a module with the [SDK](/sdk), publishing it lets other people
-install and run it against their own targets. Every published module — no matter
-who ships it — is described by the same **manifest** and verified by the same
-**SHA-256 checksum**. What differs is *where the manifest lives* and *how it is
-installed*.
+install and run it against their own targets. A module is published straight
+from its **Git repository**: you commit a `manifest.json` describing your
+releases, host the built binaries at downloadable URLs, and share the repo. An
+operator then installs it by reference:
 
-## Two kinds of modules
+```
+(gs) ❯ install github.com/GoScouter/nginx-module@1.0.0
+```
 
-GoScouter recognises two kinds of modules, and the difference is entirely about
-distribution:
+There is no central gatekeeper — anyone who can host a Git repository and a set
+of binaries can publish a module, and every install is verified by a **SHA-256
+checksum**.
 
-| | Official | Non-official |
-| --- | --- | --- |
-| **Where the manifest lives** | The [GoScouter registry](https://github.com/GoScouter/registry) | Anywhere you can host a file |
-| **Who manages it** | The GoScouter authors curate and gate what lands in the registry | You — no review, no gatekeeper |
-| **How you install it** | By reference: `install author/module@version` | By manifest URL: `install https://…/manifest.json` |
-| **Discoverable** | Yes — listed in the registry | Only if you share the link |
+## How installation resolves
 
-Both use the **exact same manifest format** and the same checksum verification.
-An official module is just a non-official module whose manifest has been accepted
-into the registry, which is what makes the short `author/module@version`
-reference resolve.
+When an operator runs `install <repo>@<version>`, GoScouter always does the same
+thing:
 
-::: tip
-Start non-official. Host a manifest, share the link, iterate. When the module is
-stable and you want it discoverable under a short reference, submit it to the
-registry to make it official.
-:::
+1. **Clone the repository.** GoScouter clones `<repo>` and reads the
+   `manifest.json` at its root. If the reference has no scheme, GoScouter tries
+   `https://` first and falls back to `http://`.
+2. **Pick the release.** It looks up the `releases` entry keyed by
+   `<version>/<GOOS>-<GOARCH>` for the operator's platform — for example
+   `1.0.0/linux-amd64`. If there's no matching entry the install fails with a
+   "cannot find matching release" error.
+3. **Download and verify.** It downloads that entry's `binary`, verifies the
+   download against its `sha256`, marks it executable, and caches it under the
+   user cache directory (e.g. `~/.cache/gs`). A checksum mismatch aborts the
+   install and removes the partial file.
+4. **Register the command.** The module is registered as a command named after
+   the **downloaded binary's file name**.
+
+From there the module is cached, reloads automatically on the next `gs` start,
+and can be removed with [`uninstall`](/commands#uninstall).
 
 ## The manifest
 
-A manifest is a small JSON document describing one version of your module. It is
-identical for official and non-official modules:
+A manifest is a small JSON document, committed to the **root of your module's
+Git repository**, that lists every release you publish:
 
 ```json
 {
   "name": "nginx",
-  "version": "1.0.0",
-  "platforms": {
-    "linux": {
+  "releases": {
+    "1.0.0/linux-amd64": {
       "sha256": "e7f1d1b839780b44f17f25adb0c6956645f431b3028299cf32805088c258f9be",
       "binary": "https://github.com/GoScouter/nginx-module/releases/download/1.0.0/nginx"
+    },
+    "1.0.0/darwin-arm64": {
+      "sha256": "…",
+      "binary": "https://github.com/GoScouter/nginx-module/releases/download/1.0.0/nginx-darwin"
+    },
+    "1.0.0/windows-amd64": {
+      "sha256": "…",
+      "binary": "https://github.com/GoScouter/nginx-module/releases/download/1.0.0/nginx.exe"
     }
   }
 }
@@ -49,40 +63,47 @@ identical for official and non-official modules:
 
 | Field | Description |
 | --- | --- |
-| `name` | The module name. For an official install it must match the `module` part of the reference. |
-| `version` | The module version. For an official install it must match the `@version` in the reference. |
-| `platforms` | A map from platform key to the binary for that platform. |
+| `name` | The module name, shown while installing. |
+| `releases` | A map from a **release key** to the binary for that key. |
 
-Each platform entry has:
+Each release entry has:
 
 | Field | Description |
 | --- | --- |
 | `binary` | A URL GoScouter downloads the executable from. |
 | `sha256` | The lowercase hex SHA-256 of that binary. The download is rejected on mismatch. |
 
-### Platform keys
+### Release keys
 
-Platform keys are Go's `GOOS` values for the operating systems you support:
+Each key combines the **version** with the target platform, written as Go's
+`GOOS-GOARCH`:
 
-| Key | OS |
-| --- | --- |
-| `linux` | Linux |
-| `darwin` | macOS |
-| `windows` | Windows |
+```
+<version>/<GOOS>-<GOARCH>
+```
 
-Add an entry for every platform you ship. If an operator's OS has no entry, the
-install fails with a "cannot find binary matching your platform" error, so
-provide as many as you can build.
+So `1.0.0/linux-amd64` is version `1.0.0` for 64-bit Linux, and
+`1.0.0/darwin-arm64` is the same version for Apple-silicon macOS. Common
+platform values:
+
+| `GOOS` | OS |     | `GOARCH` | CPU |
+| --- | --- | --- | --- | --- |
+| `linux` | Linux |   | `amd64` | 64-bit x86 |
+| `darwin` | macOS |  | `arm64` | 64-bit ARM |
+| `windows` | Windows | | | |
+
+Add an entry for every version-and-platform combination you ship. If an
+operator's platform has no entry for the requested version, the install fails
+with a "cannot find matching release" error, so provide as many as you can
+build.
 
 ::: warning
-The install command name comes from the **binary's file name**, not the
-manifest `name`. Name your Windows asset `<module>.exe` and your other assets
-`<module>` so the module is invoked by a consistent name on every platform.
+The install command name comes from the **binary's file name**, not the manifest
+`name`. Name your Windows asset `<module>.exe` and your other assets `<module>`
+so the module is invoked by a consistent name on every platform.
 :::
 
 ## Building and hosting the binaries
-
-This step is the same regardless of which kind of module you're publishing.
 
 Build a static binary for each platform you want to support. Because a module is
 a normal Go program, cross-compiling is just `GOOS`/`GOARCH`:
@@ -108,76 +129,19 @@ sha256sum nginx
 On macOS use `shasum -a 256`; on Windows,
 `Get-FileHash nginx.exe -Algorithm SHA256`.
 
-Put each URL and checksum into the matching `platforms` entry.
+Put each URL and checksum into the matching `releases` entry, then commit the
+manifest to your repository's root.
 
-## How installation resolves
+## Versioning
 
-When an operator installs a module, GoScouter always ends up doing the same
-thing — the only difference is how it *finds* the manifest.
-
-1. **Get the manifest.**
-   - *Official:* from `install author/module@version`, GoScouter fetches
-     `.../registry/main/<author>/<module>/<version>/manifest.json` and checks the
-     manifest's `name` and `version` match the reference.
-   - *Non-official:* from `install <url>`, GoScouter fetches the manifest at that
-     URL directly.
-2. Pick the entry under `platforms` matching the operator's OS.
-3. Download that binary, verify its **SHA-256 checksum**, mark it executable, and
-   cache it under the user cache directory (e.g. `~/.cache/gs`).
-4. Register it as a command named after the **downloaded binary's file name**.
-
-From here both paths are identical: the module is cached, reloads automatically
-on the next `gs` start, and can be removed with
-[`uninstall`](/commands#uninstall).
-
-## Official modules
-
-Official modules live in the [GoScouter registry](https://github.com/GoScouter/registry)
-and are curated by the GoScouter authors — only manifests accepted into that
-repository become installable by short reference. This is what lets an operator
-write:
+Because a release key carries its version, several versions can live in the same
+`manifest.json` side by side — keep `1.0.0/linux-amd64` while you add
+`1.1.0/linux-amd64`, and older references keep resolving. An operator picks the
+version they want at install time:
 
 ```
-(gs) ❯ install idank/nginx@1.0.0
+(gs) ❯ install github.com/GoScouter/nginx-module@1.1.0
 ```
-
-Each published version is a manifest at a path built from the reference:
-
-```
-<author>/<module>/<version>/manifest.json
-```
-
-So `install idank/nginx@1.0.0` resolves to:
-
-```
-idank/nginx/1.0.0/manifest.json
-```
-
-To make a module official, add your manifest at that path and open a pull
-request against the registry; the authors review and merge it. Because each new
-version is its own directory, `1.0.0`, `1.1.0`, and so on live side by side and
-older references keep working.
-
-## Non-official modules
-
-You don't have to go through the registry at all. `install` also accepts a
-direct URL to a manifest, so anyone can publish and manage a module themselves,
-without review:
-
-```
-(gs) ❯ install https://example.com/nginx/manifest.json
-```
-
-Host the manifest anywhere downloadable — a GitHub raw URL, a release asset, your
-own server — and share the link. The manifest format and checksum verification
-are exactly the same as for official modules; you are simply responsible for
-hosting it and telling people the URL.
-
-This is the right choice for:
-
-- **Testing** a module before submitting it to the registry.
-- **Private or internal** modules you don't want publicly listed.
-- **Anything** you'd rather manage yourself instead of through the registry.
 
 ## Checklist
 
@@ -185,9 +149,7 @@ This is the right choice for:
 - [ ] Binaries built for each platform, with consistent file names.
 - [ ] Binaries hosted at stable, downloadable URLs.
 - [ ] SHA-256 checksums computed for every binary.
-- [ ] Manifest written with matching `name`, `version`, and `platforms`.
-- [ ] **Official:** manifest submitted to the registry at
-      `<author>/<module>/<version>/manifest.json` and merged.
-- [ ] **Non-official:** manifest hosted at a stable URL and the link shared.
-- [ ] Install verified end to end — `install author/module@version` (official) or
-      `install <manifest-url>` (non-official).
+- [ ] `manifest.json` written with a `name` and a `releases` entry
+      (`<version>/<GOOS>-<GOARCH>`) for each binary.
+- [ ] Manifest committed to the **root** of a publicly cloneable Git repository.
+- [ ] Install verified end to end — `install <repo>@<version>`.

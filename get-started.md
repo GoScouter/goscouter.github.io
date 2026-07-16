@@ -100,11 +100,21 @@ target:
 crawls the whole domain and writes an HTML graph. See [Modules](/modules) for
 the full list and their options.
 
-Type `help` at any time to list every available command:
+Type `help` at any time to list every available command, or `info` to see the
+build version, platform, and project links:
 
 ```
 (gs) ❯ help
+(gs) ❯ info
 ```
+
+## Line editing and history
+
+The prompt supports basic line editing while you type:
+
+- **Backspace** deletes the character before the cursor.
+- **↑ / ↓** arrows scroll through the commands you've already run this session,
+  so you can re-run or tweak a previous command without retyping it.
 
 ## Leaving the shell
 
@@ -136,5 +146,5 @@ GOOS=windows GOARCH=amd64 go build -o gs.exe ./cmd
 - **[Modules](/modules)** — the scouting capabilities that ship in the box and
   how to add more.
 - **[SDK Reference](/sdk)** — build your own module in Go (or any language).
-- **[Publishing a Module](/publishing)** — package and share a module through
-  the registry.
+- **[Publishing a Module](/publishing)** — package and share a module from its
+  Git repository.

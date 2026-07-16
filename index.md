@@ -31,8 +31,8 @@ features:
     title: Extensible by design
     details: Modules are standalone executables that speak a tiny JSON protocol, so you can write them in any language.
   - icon: 📦
-    title: Install from the registry
-    details: Pull community modules by reference with "install author/module@version" — checksummed and cached automatically.
+    title: Install straight from Git
+    details: Pull a module from its Git repo with "install <repo>@<version>" — GoScouter reads its manifest, verifies the checksum, and caches the binary automatically.
   - icon: 🕸️
     title: Spider-web scans
     details: Crawl a target and its subdomains, then render the findings as an interactive HTML graph.

@@ -15,6 +15,7 @@ List everything available in the current session at any time with
 | Command | Description |
 | --- | --- |
 | [`help`](#help) | List the available commands and flags. |
+| [`info`](#info) | Show general information about the tool. |
 | [`clear`](#clear) | Clear the terminal buffer. |
 | [`install`](#install) | Install a module. |
 | [`uninstall`](#uninstall) | Remove an installed module. |
@@ -22,12 +23,23 @@ List everything available in the current session at any time with
 
 ### `help`
 
-Prints every command registered in the current session — built-ins **and**
-module commands — each with its one-line description, followed by the global
-flags.
+Prints the built-in commands and the built-in [module](/modules) commands
+registered in the current session, each with its one-line description, followed
+by the global flags. (Installed modules stay available as commands even though
+they aren't listed here.)
 
 ```
 (gs) ❯ help
+```
+
+### `info`
+
+Prints general information about the running build — the project links, the
+`gs` version, the Go version and platform it was built for, the license, and
+what GoScouter is for — next to the GoScouter logo.
+
+```
+(gs) ❯ info
 ```
 
 ### `clear`
@@ -41,31 +53,31 @@ Clears the current terminal buffer, like `clear`/`cls` in a normal shell.
 ### `install`
 
 Installs a module and registers it as a new command for the rest of the
-session. It takes a single module reference:
+session. It takes a single module reference — the module's **Git repository**
+and a **version**, joined with `@`:
 
 ```
-(gs) ❯ install <module-ref>
+(gs) ❯ install <repo>@<version>
 ```
 
-The reference is either a **registry reference** or a **direct manifest URL**:
-
 ```
-(gs) ❯ install idank/nginx@1.0.0
-(gs) ❯ install https://example.com/my-module/manifest.json
+(gs) ❯ install github.com/GoScouter/nginx-module@1.0.0
 ```
 
-A registry reference has the form `author/module@version` and is resolved
-against the [GoScouter registry](https://github.com/GoScouter/registry).
-GoScouter downloads the binary for your platform, verifies its SHA-256 checksum,
-caches it, and makes the new command available immediately:
+GoScouter clones the repository, reads the `manifest.json` at its root, and
+picks the release matching your platform and the requested version. It then
+downloads that binary, verifies its SHA-256 checksum, caches it, and makes the
+new command available immediately:
 
 ```
-» Resolving module idank/nginx@1.0.0
 Installing nginx@1.0.0
 Downloading https://github.com/GoScouter/nginx-module/releases/download/1.0.0/nginx
 Installed nginx (…bytes) to ~/.cache/gs/nginx
 ✓ Command nginx is now available
 ```
+
+The reference may include a scheme (`https://…` or `http://…`); without one,
+GoScouter tries `https://` first and falls back to `http://`.
 
 Once installed, invoke it like any other module:
 
