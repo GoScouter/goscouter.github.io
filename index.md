@@ -4,7 +4,7 @@ layout: home
 
 hero:
   name: "GoScouter"
-  text: "General purpose web analyzer"
+  text: "General purpose scouting toolkit"
   tagline: A fast, no-nonsense toolkit for scouting, probing, and analyzing the net.
   image:
     src: /logo.png
