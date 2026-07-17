@@ -8,15 +8,53 @@ target.
 
 GoScouter is written in Go and runs on **Linux, macOS, and Windows**.
 
-## Prerequisites
-
-- [Go 1.26+](https://go.dev/dl/) to build from source.
-- `make` (optional, but the repository ships a `Makefile` with the common
-  targets).
-
 ## Install
 
-Clone the repository and build the `gs` binary:
+The install script picks the right prebuilt binary for your platform from the
+latest [release](https://github.com/GoScouter/goscouter/releases), verifies its
+SHA-256 checksum, and installs it. Nothing else is needed — the binary is
+self-contained.
+
+::: code-group
+
+```sh [Linux / macOS]
+curl -fsSL https://raw.githubusercontent.com/GoScouter/goscouter/main/scripts/install.sh | sh
+```
+
+```powershell [Windows]
+irm https://raw.githubusercontent.com/GoScouter/goscouter/main/scripts/install.ps1 | iex
+```
+
+:::
+
+By default `gs` lands in `/usr/local/bin` when that's writable and `~/.local/bin`
+otherwise; on Windows it goes to `%LOCALAPPDATA%\Programs\GoScouter`, which the
+script adds to your user `PATH`.
+
+Both scripts take the same options:
+
+| Linux / macOS     | Windows              | Environment      | Description                              |
+| ----------------- | -------------------- | ---------------- | ---------------------------------------- |
+| `--version <tag>` | `-Version <tag>`     | `GS_VERSION`     | Release tag to install (default: latest) |
+| `--dir <path>`    | `-InstallDir <path>` | `GS_INSTALL_DIR` | Install directory                        |
+| `--no-verify`     | `-NoVerify`          | `GS_NO_VERIFY=1` | Skip the checksum check                  |
+| —                 | `-NoPath`            | —                | Leave `PATH` untouched                   |
+
+A piped script can't take flags, so pass the environment variables instead:
+
+```sh
+GS_VERSION=v1.2.3 GS_INSTALL_DIR=~/bin \
+  sh -c "$(curl -fsSL https://raw.githubusercontent.com/GoScouter/goscouter/main/scripts/install.sh)"
+```
+
+You can also download a binary yourself from the
+[Releases](https://github.com/GoScouter/goscouter/releases) page and drop it on
+your `PATH`.
+
+## Build from source
+
+Building needs [Go 1.26+](https://go.dev/dl/), and optionally `make` — the
+repository ships a `Makefile` with the common targets.
 
 ```sh
 git clone https://github.com/GoScouter/goscouter.git
